@@ -37,7 +37,7 @@ Sinyal hatalarının giderildiği ve bağlantı güvenilirliğinin maksimize edi
 ## 📡 v0.3.0 - Pro & Share
 **Durum:** ![Legacy](https://img.shields.io/badge/Status-Legacy-orange)
 
-Sosyal özelliklerin ve görsel şölenin başladığı dönüm noktası. (Not: Bu sürümde var olmayan arkadaşlarınıza bile bağlanıp dertleşebilirsiniz 🤡)
+Sosyal özelliklerin ve görsel şölenin başladığı dönüm noktası. (Not: Karşı tarafın var olup olmadığını henüz kontrol etmediğimiz için duvarlarla bile dertleşebildiğiniz o "şizofreni" modu aktif olan sürüm... 🤡)
 
 ### ✨ Özellikler
 - **QR Code Identity:** Her kullanıcı için eşsiz bir QR kod profili.
@@ -52,7 +52,7 @@ Sosyal özelliklerin ve görsel şölenin başladığı dönüm noktası. (Not: 
 ## 🐣 v0.1.0 - Alpha Wave
 **Durum:** ![Archived](https://img.shields.io/badge/Status-Archived-red)
 
-Zerowawe'nin doğuşu. Temel P2P mesajlaşma ve rastgele nick ataması. (Not: Hayali arkadaşlarla konuşma desteği standart olarak gelir.)
+Zerowawe'nin doğuşu. Temel P2P mesajlaşma ve rastgele nick ataması. (Not: Bağlantı lojiğini o kadar iyimser yazdık ki, olmayan kullanıcılara bile 'Dalga yakalandı' diyerek başarıyla bağlandığımız efsanevi hatalı sürüm.)
 
 📦 **[Zerowawe-Alpha.apk](./releases/Zerowawe-Alpha.apk)**
 
