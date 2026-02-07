@@ -21,11 +21,11 @@ body {
   background-color: var(--bg-dark);
   color: var(--text-main);
   overflow-x: hidden;
-  height: 100vh;
+  height: 100dvh;
 }
 
 .app-container {
-  min-height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   padding: env(safe-area-inset-top) 1.2rem env(safe-area-inset-bottom) 1.2rem;

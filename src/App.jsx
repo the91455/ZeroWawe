@@ -32,7 +32,10 @@ const Zerowawe = () => {
   }, []);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const timeoutId = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+    }, 100);
+    return () => clearTimeout(timeoutId);
   }, [messages]);
 
   const initializePeer = (id) => {
@@ -184,7 +187,7 @@ const Zerowawe = () => {
         <div className="bg-wave"></div>
         <div className="content-wrapper" style={{ justifyContent: 'center', alignItems: 'center' }}>
           <div className="fade-in-up" style={{ textAlign: 'center', marginBottom: '3rem' }}>
-            <h1 className="neon-title">Zerowawe</h1>
+            <img src="/zerowawe_banner.png" alt="Zerowawe Logo" style={{ width: '180px', marginBottom: '1rem' }} />
             <p style={{ color: 'var(--text-dim)', fontSize: '1.1rem' }}>Zero Trace. Pure Wave.</p>
           </div>
 
