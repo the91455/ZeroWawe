@@ -71,6 +71,42 @@ body {
   flex: 1;
 }
 
+.logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 2rem;
+  filter: drop-shadow(0 0 15px rgba(0, 229, 255, 0.2));
+}
+
+.neon-logo {
+  width: 200px;
+  height: auto;
+  border-radius: 20px;
+  animation: logoGlow 4s infinite alternate ease-in-out;
+}
+
+@keyframes logoGlow {
+  from {
+    filter: drop-shadow(0 0 10px rgba(0, 229, 255, 0.3));
+    transform: scale(1);
+  }
+
+  to {
+    filter: drop-shadow(0 0 25px rgba(0, 229, 255, 0.6));
+    transform: scale(1.02);
+  }
+}
+
+.splash-subtitle {
+  color: var(--text-dim);
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 300;
+  opacity: 0.8;
+}
+
 .glass-card {
   background: rgba(13, 13, 13, 0.8);
   backdrop-filter: blur(20px);

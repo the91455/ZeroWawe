@@ -6,7 +6,9 @@
 - **[Branding]** Identity Update: Uygulama logosu "Zero Trace. Pure Wave" ruhuna uygun olarak güncellendi.
 - **[Repo]** Project Cleanup: Eski ve hatalı sürümler temizlendi.
 
-### Full Changelog: [here](https://github.com/the91455/zerowawe/commits/v1.0.0)
+### Full Changelog: [here](https://github.com/the91455/ZeroWawe/commits/v1.0.0)
+
+📦 **[Latest Release Assets](https://github.com/the91455/ZeroWawe/releases/latest)**
 
 ---
 > "Zero Trace. Pure Wave." 🌊⚡

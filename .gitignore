@@ -19,11 +19,11 @@ android/
 ios/
 
 # RELEASES - ÖNEMLİ: Bu klasörün ve içindeki APK'ların git'e girmesine izin veriyoruz
-!releases/
-!releases/*.apk
+releases/*
+releases/*.apk
 
 # Images / Banner
-!zerowawe_banner.png
+zerowawe_banner.png
 
 # Editor
 .vscode
