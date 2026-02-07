@@ -32,9 +32,14 @@ const Zerowawe = () => {
   }, []);
 
   useEffect(() => {
+    // block: 'end' ensures the bottom of the element is aligned with the bottom of the container
+    // We use a safe timeout to wait for the DOM and keyboard adjustments
     const timeoutId = setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
-    }, 100);
+      messagesEndRef.current?.scrollIntoView({
+        behavior: "auto",
+        block: "end"
+      });
+    }, 150);
     return () => clearTimeout(timeoutId);
   }, [messages]);
 
@@ -296,8 +301,11 @@ const Zerowawe = () => {
                   {remoteNick} ile dalga boyu yakalandı 📡
                 </span>
               </div>
-              {messages.map((m) => (
-                <div key={m.id} className={`chat-bubble bubble-${m.sender} fade-in-up`}>
+              {messages.map((m, index) => (
+                <div
+                  key={m.id}
+                  className={`chat-bubble bubble-${m.sender} ${index === messages.length - 1 ? 'fade-in-up' : ''}`}
+                >
                   {m.image && <img src={m.image} className="img-preview" alt="sent" />}
                   {m.text && <div>{m.text}</div>}
                   <div className="msg-status">
