@@ -1,6 +1,6 @@
 # 🌊 Zerowawe
 
-![Zerowawe Banner](./zerowawe_banner.png)
+![Zerowawe Banner](./public/logo.png)
 
 **Zerowawe**, peer-to-peer (P2P) mesajlaşmanın en saf ve anonim halidir. Hesap açma, şifre hatırlama veya merkezi bir sunucuya güvenme derdi yok. Sadece bir nick al, dalga boyunu paylaş ve konuşmaya başla.
 
