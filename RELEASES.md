@@ -1,12 +1,12 @@
 # Zerowawe v1.0.2 (E2EE Security Update)
-- [Download v1.0.2 Debug APK](releases/tag/1.0.2)
+- [Download v1.0.2 Debug APK](https://github.com/the91455/releases/tag/1.0.2)
 - **[Security]** Added End-to-End Encryption (AES-GCM 256-bit).
 - **[Security]** Added Fingerprint Verification (Safety Number).
 - **[UX]** Added "Secure" shield badge in chat.
 - **[Docs]** Added SECURITY.md.
 
 # Zerowawe v1.0.1 (Debug)
-- [Download v1.0.1 Debug APK](releases/tag/1.0.1)
+- [Download v1.0.1 Debug APK](https://github.com/the91455/releases/tag/1.0.1)
 - **[Icon]** Updated app icon to Zerowawe Banner.
 - **[Fix]** Fixed scroll issues in chat interface.
 
