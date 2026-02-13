@@ -1,3 +1,8 @@
+# Zerowawe v1.0.1 (Debug)
+- [Download v1.0.1 Debug APK](releases/Zerowawe-v1.0.1-debug.apk)
+- **[Icon]** Updated app icon to Zerowawe Banner.
+- **[Fix]** Fixed scroll issues in chat interface.
+
 # Zerowawe v1.0.0
 
 ### Changelog

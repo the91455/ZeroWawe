@@ -20,8 +20,11 @@ body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--bg-dark);
   color: var(--text-main);
-  overflow-x: hidden;
+  overflow: hidden;
   height: 100dvh;
+  width: 100vw;
+  position: fixed;
+  overscroll-behavior: none;
 }
 
 .app-container {

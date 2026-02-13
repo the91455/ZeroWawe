@@ -35,11 +35,10 @@ const Zerowawe = () => {
     // block: 'end' ensures the bottom of the element is aligned with the bottom of the container
     // We use a safe timeout to wait for the DOM and keyboard adjustments
     const timeoutId = setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({
-        behavior: "auto",
-        block: "end"
-      });
-    }, 150);
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    }, 100);
     return () => clearTimeout(timeoutId);
   }, [messages]);
 
@@ -341,10 +340,15 @@ const Zerowawe = () => {
               placeholder="Mesajını fısılda..."
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
               style={{ flex: 1 }}
             />
-            <button className="btn-glow" style={{ padding: '1rem' }} onClick={() => sendMessage()}>
+            <button className="btn-glow" style={{ padding: '1rem' }} onClick={(e) => { e.preventDefault(); sendMessage(); }}>
               <Send size={22} />
             </button>
           </div>
