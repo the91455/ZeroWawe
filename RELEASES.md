@@ -3,7 +3,7 @@
 - **[Icon]** Updated app icon to Zerowawe Banner.
 - **[Fix]** Fixed scroll issues in chat interface.
 
-# Zerowawe v1.0.0
+# Zerowawe v1.0.2
 
 ### Changelog
 - **[UI]** Smooth Scroll Fix: Mesaj gönderirken yaşanan ekran kayma sorunu tamamen giderildi.
