@@ -1,13 +1,15 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import Peer from 'peerjs';
 import { QRCodeCanvas } from 'qrcode.react';
 import { Share } from '@capacitor/share';
 import { Clipboard } from '@capacitor/clipboard';
 import { generateNickname } from './utils/nicknames';
+import { CryptoManager } from './utils/crypto';
 import {
   Send, Radio, ArrowRight, Image as ImageIcon,
   Check, CheckCheck, Loader2, RefreshCw,
-  Share2, Copy, QrCode, X, ExternalLink
+  Share2, Copy, QrCode, X, ShieldCheck
 } from 'lucide-react';
 
 const Zerowawe = () => {
@@ -22,7 +24,10 @@ const Zerowawe = () => {
   const [remoteNick, setRemoteNick] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showQR, setShowQR] = useState(false);
+  const [isSecure, setIsSecure] = useState(false);
+  const [fingerprint, setFingerprint] = useState('');
 
+  const cryptoManager = useRef(new CryptoManager());
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -32,8 +37,6 @@ const Zerowawe = () => {
   }, []);
 
   useEffect(() => {
-    // block: 'end' ensures the bottom of the element is aligned with the bottom of the container
-    // We use a safe timeout to wait for the DOM and keyboard adjustments
     const timeoutId = setTimeout(() => {
       if (messagesEndRef.current) {
         messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -72,28 +75,61 @@ const Zerowawe = () => {
   };
 
   const setupConnection = (connection) => {
-    // Only set the connection state once it is actually open
-    connection.on('open', () => {
+    connection.on('open', async () => {
       setConn(connection);
       setRemoteNick(connection.peer);
       setIsLoading(false);
-      connection.send({ type: 'handshake', nick: nickname });
+
+      // Start Secure Handshake
+      try {
+        await cryptoManager.current.generateKeyPair();
+        const publicKey = await cryptoManager.current.exportPublicKey();
+        connection.send({ type: 'handshake-syn', nick: nickname, key: publicKey });
+      } catch (err) {
+        console.error('Crypto handshake init failed:', err);
+        alert('Güvenli bağlantı başlatılamadı.');
+      }
     });
 
-    connection.on('data', (data) => {
-      if (data.type === 'handshake') {
-        setRemoteNick(data.nick);
-      } else if (data.type === 'msg') {
-        setMessages((prev) => [...prev, {
-          id: data.id,
-          sender: 'them',
-          text: data.text,
-          image: data.image,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }]);
-        connection.send({ type: 'ack', id: data.id });
-      } else if (data.type === 'ack') {
-        setMessages((prev) => prev.map(m => m.id === data.id ? { ...m, delivered: true } : m));
+    connection.on('data', async (data) => {
+      try {
+        if (data.type === 'handshake-syn') {
+          setRemoteNick(data.nick);
+          // Receive their key, derive secret, send ours back
+          if (data.key) {
+            await cryptoManager.current.deriveSharedSecret(data.key);
+            const myPublicKey = await cryptoManager.current.exportPublicKey();
+            connection.send({ type: 'handshake-ack', nick: nickname, key: myPublicKey });
+            setIsSecure(true);
+            const fp = await cryptoManager.current.computeFingerprint(data.key);
+            setFingerprint(fp);
+          }
+        } else if (data.type === 'handshake-ack') {
+          if (data.key) {
+            await cryptoManager.current.deriveSharedSecret(data.key);
+            setIsSecure(true);
+            const fp = await cryptoManager.current.computeFingerprint(data.key);
+            setFingerprint(fp);
+          }
+        } else if (data.type === 'secure-msg') {
+          // Decrypt payload
+          const decryptedPayload = await cryptoManager.current.decrypt(data.payload);
+
+          setMessages((prev) => [...prev, {
+            id: decryptedPayload.id,
+            sender: 'them',
+            text: decryptedPayload.text,
+            image: decryptedPayload.image,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }]);
+
+          // Send ACK (encrypted? or plain? ACK contains no sensitive data usually, but let's encrypt to hide traffic patterns if desired. For now plain ACK is fine for delivery status)
+          connection.send({ type: 'ack', id: decryptedPayload.id });
+        } else if (data.type === 'ack') {
+          setMessages((prev) => prev.map(m => m.id === data.id ? { ...m, delivered: true } : m));
+        }
+      } catch (err) {
+        console.error('Secure processing error:', err);
       }
     });
 
@@ -102,6 +138,8 @@ const Zerowawe = () => {
       setRemoteNick('');
       setMessages([]);
       setIsLoading(false);
+      setIsSecure(false);
+      setFingerprint('');
       alert('Dalga boyu koptu.');
     });
   };
@@ -149,29 +187,45 @@ const Zerowawe = () => {
     }, 10000);
   };
 
-  const sendMessage = (image = null) => {
+  const sendMessage = async (image = null) => {
     if (!conn || (!inputText.trim() && !image)) return;
+    if (!isSecure) {
+      alert('Güvenli bağlantı henüz hazır değil, bekleniyor...');
+      return;
+    }
 
     const msgId = crypto.randomUUID();
-    const msgData = {
-      type: 'msg',
+    const payload = {
       id: msgId,
       text: inputText,
       image: image
     };
 
-    conn.send(msgData);
+    try {
+      const encrypted = await cryptoManager.current.encrypt(payload);
 
-    setMessages((prev) => [...prev, {
-      id: msgId,
-      sender: 'me',
-      text: inputText,
-      image: image,
-      delivered: false,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    }]);
+      conn.send({
+        type: 'secure-msg',
+        payload: {
+          iv: Array.from(encrypted.iv),
+          ciphertext: Array.from(encrypted.ciphertext)
+        }
+      });
 
-    setInputText('');
+      setMessages((prev) => [...prev, {
+        id: msgId,
+        sender: 'me',
+        text: inputText,
+        image: image,
+        delivered: false,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]);
+
+      setInputText('');
+    } catch (err) {
+      console.error('Encryption failed:', err);
+      alert('Şifreleme hatası!');
+    }
   };
 
   const handleImageSelect = (e) => {
@@ -271,7 +325,6 @@ const Zerowawe = () => {
                   />
                   <button
                     onClick={() => {
-                      // Example of pasting from clipboard if needed, but for now just a clear button
                       setTargetId('');
                     }}
                     style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-dim)' }}
@@ -299,6 +352,11 @@ const Zerowawe = () => {
                 <span style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.05)', padding: '6px 14px', borderRadius: '20px', color: 'var(--text-dim)', border: '1px solid rgba(255,255,255,0.05)', maxWidth: '90%', display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {remoteNick} ile dalga boyu yakalandı 📡
                 </span>
+                {isSecure && (
+                  <div style={{ marginTop: '0.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px', color: '#00e676', fontSize: '0.7rem' }}>
+                    <ShieldCheck size={14} /> E2EE SECURE
+                  </div>
+                )}
               </div>
               {messages.map((m, index) => (
                 <div
@@ -337,7 +395,7 @@ const Zerowawe = () => {
             />
             <input
               className="input-field"
-              placeholder="Mesajını fısılda..."
+              placeholder={isSecure ? "Mesajını şifrele ve fısılda..." : "Bağlantı kuruluyor..."}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyPress={(e) => {
@@ -347,14 +405,15 @@ const Zerowawe = () => {
                 }
               }}
               style={{ flex: 1 }}
+              disabled={!isSecure}
             />
-            <button className="btn-glow" style={{ padding: '1rem' }} onClick={(e) => { e.preventDefault(); sendMessage(); }}>
+            <button className="btn-glow" style={{ padding: '1rem' }} onClick={(e) => { e.preventDefault(); sendMessage(); }} disabled={!isSecure}>
               <Send size={22} />
             </button>
           </div>
         )}
 
-        {/* QR CODE MODAL */}
+        {/* QR CODE MODAL - With Fingerprint */}
         {showQR && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 2000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2rem' }}>
             <div className="glass-card fade-in-up" style={{ width: '100%', maxWidth: '350px', textAlign: 'center', border: '2px solid var(--accent-secondary)' }}>
@@ -373,6 +432,13 @@ const Zerowawe = () => {
               <div style={{ marginTop: '1.5rem', fontWeight: 'bold', fontSize: '1.1rem' }}>
                 {nickname}
               </div>
+
+              {isSecure && fingerprint && (
+                <div style={{ marginTop: '1rem', padding: '10px', background: 'rgba(0,255,0,0.1)', borderRadius: '10px', border: '1px solid rgba(0,255,0,0.3)' }}>
+                  <div style={{ fontSize: '0.7rem', color: '#00e676', fontWeight: 'bold' }}>GÜVENLİK PARMAK İZİ</div>
+                  <div style={{ fontSize: '0.6rem', fontFamily: 'monospace', wordBreak: 'break-all', marginTop: '4px' }}>{fingerprint}</div>
+                </div>
+              )}
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '1.5rem' }}>
                 <button className="btn-glow" style={{ flex: 1, padding: '0.8rem' }} onClick={handleShare}>
