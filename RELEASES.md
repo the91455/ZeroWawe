@@ -1,5 +1,5 @@
 # Zerowawe v1.0.2 (Verified E2EE)
-- [Download v1.0.2 APK](releases/Zerowawe-v1.0.2.apk)
+- [Download v1.0.2 APK](https://github.com/the91455/ZeroWawe/releases/tag/1.0.2)
 - **[Security]** Added End-to-End Encryption (AES-GCM 256-bit).
 - **[Security]** Added Mandatory Manual Identity Verification.
 - **[UX]** Added "Secure" shield badge and Verification Modal.
