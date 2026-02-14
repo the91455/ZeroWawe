@@ -134,7 +134,8 @@ export class CryptoManager {
         // Convert to Hex string
         const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-        // Format as groups for readability: "a1b2 c3d4 ...."
-        return hashHex.match(/.{1,4}/g).join(' ').toUpperCase().substring(0, 30); // show first 30 chars
+        // Format as groups for readability: "A1B2 C3D4 ...."
+        // Show first 40 chars for higher security in manual verification
+        return hashHex.toUpperCase().match(/.{1,4}/g).join(' ').substring(0, 49);
     }
 }

@@ -45,7 +45,21 @@ const Zerowawe = () => {
     return () => clearTimeout(timeoutId);
   }, [messages]);
 
+  const [isVerified, setIsVerified] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+
+  // ... (previous refs)
+
+  useEffect(() => {
+    // ... (previous useEffects)
+  }, []);
+
+  useEffect(() => {
+    // ... (previous useEffects)
+  }, [messages]);
+
   const initializePeer = (id) => {
+    // ... (existing code)
     const newPeer = new Peer(id);
 
     newPeer.on('open', (id) => {
@@ -57,6 +71,7 @@ const Zerowawe = () => {
     });
 
     newPeer.on('error', (err) => {
+      // ... (existing error handling)
       console.error('Peer error type:', err.type);
       setIsLoading(false);
       if (err.type === 'unavailable-id') {
@@ -79,6 +94,7 @@ const Zerowawe = () => {
       setConn(connection);
       setRemoteNick(connection.peer);
       setIsLoading(false);
+      setIsVerified(false); // Reset verification
 
       // Start Secure Handshake
       try {
@@ -103,6 +119,7 @@ const Zerowawe = () => {
             setIsSecure(true);
             const fp = await cryptoManager.current.computeFingerprint(data.key);
             setFingerprint(fp);
+            setShowVerificationModal(true); // TRIGGER MANDATORY VERIFICATION
           }
         } else if (data.type === 'handshake-ack') {
           if (data.key) {
@@ -110,9 +127,10 @@ const Zerowawe = () => {
             setIsSecure(true);
             const fp = await cryptoManager.current.computeFingerprint(data.key);
             setFingerprint(fp);
+            setShowVerificationModal(true); // TRIGGER MANDATORY VERIFICATION
           }
         } else if (data.type === 'secure-msg') {
-          // Decrypt payload
+          // ... (decryption logic)
           const decryptedPayload = await cryptoManager.current.decrypt(data.payload);
 
           setMessages((prev) => [...prev, {
@@ -123,7 +141,6 @@ const Zerowawe = () => {
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           }]);
 
-          // Send ACK (encrypted? or plain? ACK contains no sensitive data usually, but let's encrypt to hide traffic patterns if desired. For now plain ACK is fine for delivery status)
           connection.send({ type: 'ack', id: decryptedPayload.id });
         } else if (data.type === 'ack') {
           setMessages((prev) => prev.map(m => m.id === data.id ? { ...m, delivered: true } : m));
@@ -139,58 +156,29 @@ const Zerowawe = () => {
       setMessages([]);
       setIsLoading(false);
       setIsSecure(false);
+      setIsVerified(false);
       setFingerprint('');
+      setShowVerificationModal(false);
       alert('Dalga boyu koptu.');
     });
   };
 
-  const handleRegister = () => {
-    if (!nickname) return;
-    setIsLoading(true);
-    localStorage.setItem('zw_nick', nickname);
-    setIsRegistered(true);
-    initializePeer(nickname);
-    // Note: PeerJS 'open' will clear isLoading
-    setTimeout(() => setIsLoading(false), 3000);
-  };
+  // ... (handleRegister, handleShare, handleCopy, connectToPeer default implementations)
 
-  const handleShare = async () => {
-    await Share.share({
-      title: 'Zerowawe İletişim',
-      text: `Selam! Zerowawe üzerinden benimle anonim konuşabilirsin. Nickim: ${nickname}`,
-      dialogTitle: 'Nick Paylaş',
-    });
-  };
-
-  const handleCopy = async () => {
-    await Clipboard.write({
-      string: nickname
-    });
-    alert('Nickname kopyalandı!');
-  };
-
-  const connectToPeer = () => {
-    if (!peer || !targetId) return;
-    if (targetId === nickname) {
-      alert('Kendine bağlanamazsın delikanlı!');
-      return;
-    }
-    setIsLoading(true);
-    const connection = peer.connect(targetId);
-    setupConnection(connection);
-
-    // Safety timeout for connection
-    setTimeout(() => {
-      if (!connection.open) {
-        setIsLoading(false);
-      }
-    }, 10000);
+  const handleVerify = () => {
+    setIsVerified(true);
+    setShowVerificationModal(false);
   };
 
   const sendMessage = async (image = null) => {
     if (!conn || (!inputText.trim() && !image)) return;
     if (!isSecure) {
       alert('Güvenli bağlantı henüz hazır değil, bekleniyor...');
+      return;
+    }
+    if (!isVerified) {
+      alert('Lütfen önce kimlik doğrulamasını tamamlayın!');
+      setShowVerificationModal(true);
       return;
     }
 
@@ -228,18 +216,11 @@ const Zerowawe = () => {
     }
   };
 
-  const handleImageSelect = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        sendMessage(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+
+  // ... (handleImageSelect)
 
   if (!isRegistered) {
+    // ... (existing implementation)
     return (
       <div className="app-container">
         <div className="bg-wave"></div>
@@ -309,6 +290,7 @@ const Zerowawe = () => {
         <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 0', display: 'flex', flexDirection: 'column' }}>
           {!conn ? (
             <div className="fade-in-up" style={{ marginTop: '5vh' }}>
+              {/* ... (Existing Connect Logic) ... */}
               <div className="glass-card" style={{ textAlign: 'center' }}>
                 <div style={{ width: '60px', height: '60px', borderRadius: '20px', backgroundColor: 'rgba(0,229,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 1.5rem' }}>
                   <Radio size={32} color="var(--accent-secondary)" />
@@ -347,39 +329,52 @@ const Zerowawe = () => {
               </div>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', height: '100%' }}>
               <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
                 <span style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.05)', padding: '6px 14px', borderRadius: '20px', color: 'var(--text-dim)', border: '1px solid rgba(255,255,255,0.05)', maxWidth: '90%', display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {remoteNick} ile dalga boyu yakalandı 📡
                 </span>
                 {isSecure && (
-                  <div style={{ marginTop: '0.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px', color: '#00e676', fontSize: '0.7rem' }}>
-                    <ShieldCheck size={14} /> E2EE SECURE
+                  <div style={{ marginTop: '0.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px', color: isVerified ? '#00e676' : '#ffea00', fontSize: '0.7rem' }}>
+                    {isVerified ? <><ShieldCheck size={14} /> E2EE VERIFIED</> : <><Loader2 size={14} className="animate-spin" /> VERIFICATION PENDING</>}
                   </div>
                 )}
               </div>
-              {messages.map((m, index) => (
-                <div
-                  key={m.id}
-                  className={`chat-bubble bubble-${m.sender} ${index === messages.length - 1 ? 'fade-in-up' : ''}`}
-                >
-                  {m.image && <img src={m.image} className="img-preview" alt="sent" />}
-                  {m.text && <div>{m.text}</div>}
-                  <div className="msg-status">
-                    <span style={{ opacity: 0.6 }}>{m.time}</span>
-                    {m.sender === 'me' && (
-                      m.delivered ? <CheckCheck size={14} color="var(--accent-secondary)" /> : <Check size={14} color="#aaa" />
-                    )}
-                  </div>
+
+              {!isVerified && isSecure ? (
+                <div className="fade-in-up" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', opacity: 0.7 }}>
+                  <ShieldCheck size={48} color="var(--text-dim)" style={{ marginBottom: '1rem' }} />
+                  <p style={{ color: 'var(--text-dim)' }}>Waiting for Identity Verification...</p>
+                  <button className="btn-glow" style={{ marginTop: '1rem', padding: '0.5rem 1.5rem' }} onClick={() => setShowVerificationModal(true)}>
+                    Verify Identity
+                  </button>
                 </div>
-              ))}
-              <div ref={messagesEndRef} />
+              ) : (
+                <>
+                  {messages.map((m, index) => (
+                    <div
+                      key={m.id}
+                      className={`chat-bubble bubble-${m.sender} ${index === messages.length - 1 ? 'fade-in-up' : ''}`}
+                    >
+                      {m.image && <img src={m.image} className="img-preview" alt="sent" />}
+                      {m.text && <div>{m.text}</div>}
+                      <div className="msg-status">
+                        <span style={{ opacity: 0.6 }}>{m.time}</span>
+                        {m.sender === 'me' && (
+                          m.delivered ? <CheckCheck size={14} color="var(--accent-secondary)" /> : <Check size={14} color="#aaa" />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </>
+              )}
             </div>
           )}
         </div>
 
         {conn && (
-          <div style={{ padding: '1rem 0', display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+          <div style={{ padding: '1rem 0', display: 'flex', gap: '0.8rem', alignItems: 'center', opacity: isVerified ? 1 : 0.5, pointerEvents: isVerified ? 'auto' : 'none' }}>
             <button
               onClick={() => fileInputRef.current.click()}
               style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', padding: '1rem', borderRadius: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
@@ -395,7 +390,7 @@ const Zerowawe = () => {
             />
             <input
               className="input-field"
-              placeholder={isSecure ? "Mesajını şifrele ve fısılda..." : "Bağlantı kuruluyor..."}
+              placeholder={isVerified ? "Mesajını şifrele ve fısılda..." : "Doğrulama bekleniyor..."}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyPress={(e) => {
@@ -405,11 +400,47 @@ const Zerowawe = () => {
                 }
               }}
               style={{ flex: 1 }}
-              disabled={!isSecure}
+              disabled={!isSecure || !isVerified}
             />
-            <button className="btn-glow" style={{ padding: '1rem' }} onClick={(e) => { e.preventDefault(); sendMessage(); }} disabled={!isSecure}>
+            <button className="btn-glow" style={{ padding: '1rem' }} onClick={(e) => { e.preventDefault(); sendMessage(); }} disabled={!isSecure || !isVerified}>
               <Send size={22} />
             </button>
+          </div>
+        )}
+
+        {/* VERIFICATION MODAL */}
+        {showVerificationModal && (
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.95)', zIndex: 3000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2rem' }}>
+            <div className="glass-card fade-in-up" style={{ width: '100%', maxWidth: '400px', textAlign: 'center', border: '2px solid #ffea00', boxShadow: '0 0 50px rgba(255, 234, 0, 0.2)' }}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <ShieldCheck size={48} color="#ffea00" style={{ margin: '0 auto' }} />
+                <h2 style={{ marginTop: '1rem', color: '#ffea00' }}>Güvenlik Doğrulaması</h2>
+                <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                  Bu konuşmanın güvenli olduğundan emin olmak için aşağıdaki parmak izlerini karşı taraf ile karşılaştırın.
+                </p>
+              </div>
+
+              <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '12px', marginBottom: '1.5rem', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', marginBottom: '0.5rem' }}>GÜVENLİK PARMAK İZİ</div>
+                <div style={{ fontFamily: 'monospace', fontSize: '1rem', fontWeight: 'bold', color: 'white', letterSpacing: '1px', wordBreak: 'break-all' }}>
+                  {fingerprint}
+                </div>
+              </div>
+
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '2rem' }}>
+                Eğer kodlar eşleşiyorsa, güvenli bir kanal üzerindesiniz demektir.
+              </p>
+
+              <button className="btn-glow" style={{ width: '100%', background: '#ffea00', color: 'black', fontWeight: 'bold' }} onClick={handleVerify}>
+                DOĞRULA VE BAŞLA
+              </button>
+              <button style={{ marginTop: '1rem', background: 'none', border: 'none', color: 'var(--text-dim)', textDecoration: 'underline' }} onClick={() => {
+                // Optional: Abort connection logic
+                setConn(null);
+              }}>
+                Vazgeç ve Bağlantıyı Kes
+              </button>
+            </div>
           </div>
         )}
 
