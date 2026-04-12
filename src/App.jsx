@@ -50,6 +50,9 @@ const t = {
       verifying: "Verification pending..."
     }
   };
+  useEffect(() => {
+    localStorage.setItem('zw_lang', lang);
+  }, [lang]);
 
 const Zerowawe = () => {
   const [nickname, setNickname] = useState('');
