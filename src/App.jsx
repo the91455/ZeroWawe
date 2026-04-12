@@ -12,6 +12,45 @@ import {
   Share2, Copy, QrCode, X, ShieldCheck
 } from 'lucide-react';
 
+const t = {
+    tr: {
+      connect: "BAĞLANTI KUR",
+      catchFreq: "Frekans Yakala",
+      enterNick: "Mesajlaşmak istediğin kişinin takma adını gir.",
+      targetPlaceholder: "Hedef Nickname...",
+      connected: (nick) => `${nick} ile dalga boyu yakalandı 📡`,
+      waitingSecure: "Güvenli bağlantı henüz hazır değil...",
+      verifyFirst: "Önce doğrulama yap!",
+      encryptionError: "Şifreleme hatası!",
+      connectionLost: "Bağlantı koptu.",
+      verify: "DOĞRULA VE BAŞLA",
+      verificationTitle: "Güvenlik Doğrulaması",
+      fingerprint: "GÜVENLİK PARMAK İZİ",
+      shareWave: "DALGA BOYUNU PAYLAŞ",
+      shareDesc: "QR kod ile bağlanabilir.",
+      whisper: "Mesajını şifrele...",
+      verifying: "Doğrulama bekleniyor..."
+    },
+    en: {
+      connect: "Connect",
+      catchFreq: "Catch the frequency",
+      enterNick: "Enter the nickname to connect",
+      targetPlaceholder: "Target Nickname...",
+      connected: (nick) => `Waveform established with ${nick} 📡`,
+      waitingSecure: "Secure connection not ready...",
+      verifyFirst: "Please verify first!",
+      encryptionError: "Encryption failed!",
+      connectionLost: "Connection lost.",
+      verify: "Verify and start",
+      verificationTitle: "Verification",
+      fingerprint: "Security Fingerprint",
+      shareWave: "Share the waveform",
+      shareDesc: "Scan QR to connect.",
+      whisper: "Encrypt your message...",
+      verifying: "Verification pending..."
+    }
+  };
+
 const Zerowawe = () => {
   const [nickname, setNickname] = useState('');
   const [isRegistered, setIsRegistered] = useState(false);
